@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PuckPal – Off-Ice Hockey Trainer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #050816;
+      --bg-alt: #0b1020;
+      --accent: #4fd1ff;
+      --accent-soft: rgba(79, 209, 255, 0.16);
+      --accent-strong: rgba(79, 209, 255, 0.28);
+      --text: #f7fafc;
+      --muted: #a0aec0;
+      --danger: #f56565;
+      --card-radius: 18px;
+      --shadow-soft: 0 18px 40px rgba(0,0,0,0.45);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at top, #1a2545 0, #050816 60%);
+      min-height: 100vh;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 16px;
+    }
+    #app {
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(5,8,22,0.98);
+      border-radius: 22px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    aside {
+      width: 220px;
+      background: #050816;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 8px;
+    }
+    .puck-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      box-shadow: 0 0 12px var(--accent-soft);
+      position: relative;
+    }
+    .puck-icon::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0f172a, #1a365d);
+    }
+    .logo-text {
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      font-size: 14px;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .sidebar-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin: 8px 6px 2px;
+    }
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      margin: 2px 0;
+      border-radius: 14px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.12s, color 0.12s, transform 0.08s;
+    }
+    .nav-btn span.right-label {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.04);
+      transform: translateY(-1px);
+    }
+    .nav-btn.active {
+      background: var(--accent-strong);
+      color: var(--text);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 14px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to right, #050816, #101936);
+    }
+    header .user-chip {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    header .user-chip.ok {
+      color: #9ae6b4;
+      border-color: rgba(72,187,120,0.6);
+    }
+    .btn-small-outline {
+      background: transparent;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--muted);
+      font-size: 11px;
+      padding: 4px 9px;
+      cursor: pointer;
+    }
+    .btn-small-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    section.view {
+      flex: 1;
+      padding: 20px 24px 24px;
+      overflow-y: auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+    h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+    .card {
+      background: linear-gradient(135deg, rgba(16,24,48,0.98), rgba(5,10,26,0.98));
+      border-radius: var(--card-radius);
+      padding: 16px 18px 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.5);
+      margin-bottom: 16px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.4fr 1.1fr;
+      gap: 16px;
+    }
+    @media(max-width: 900px) {
+      #app {
+        flex-direction: column;
+      }
+      aside {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+      main {
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(2,6,23,0.95);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      resize: vertical;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 15px;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent);
+      color: #021013;
+      font-weight: 600;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+      margin-top: 8px;
+      transition: transform 0.08s, box-shadow 0.08s, background 0.12s;
+    }
+    .btn.secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      box-shadow: none;
+    }
+    .btn.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    .btn.small {
+      font-size: 12px;
+      padding: 6px 12px;
+      box-shadow: none;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.45);
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .alert {
+      font-size: 13px;
+      color: var(--danger);
+      margin-top: 6px;
+    }
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .pill {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+    }
+    .pill.accent {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .drill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(210px,1fr));
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .drill-card {
+      background: rgba(5,10,26,0.98);
+      border-radius: 14px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, border 0.12s;
+    }
+    .drill-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 26px rgba(0,0,0,0.4);
+      border-color: var(--accent);
+    }
+    .drill-title {
+      font-size: 14px;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .drill-meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .thumb {
+      width: 100%;
+      height: 120px;
+      border-radius: 10px;
+      background-size: cover;
+      background-position: center;
+      margin-bottom: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .thumb::after {
+      content: "▶";
+      position: absolute;
+      right: 9px;
+      bottom: 7px;
+      font-size: 15px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.7);
+    }
+    .timer-display {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    th, td {
+      padding: 7px 9px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    th {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    tr.best-row {
+      background: rgba(79, 209, 255, 0.08);
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .day-cell {
+      min-height: 80px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 7px;
+      background: rgba(3,8,26,0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 2px;
+    }
+    .day-number {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .day-drill-title {
+      font-size: 12px;
+    }
+    .day-meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .tagline-small {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <div class="sidebar-logo">
+      <div class="puck-icon"></div>
+      <div>
+        <div class="logo-text">PuckPal</div>
+        <div class="logo-sub">Off-Ice Hockey Drills</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-section-title">Account</div>
+      <button class="nav-btn active" data-view="authView">
+        Login / Register
+      </button>
+    </div>
+
+    <div>
+      <div class="sidebar-section-title">Training</div>
+      <button class="nav-btn" data-view="homeView">
+        Drill Finder
+        <span class="right-label">Step 1</span>
+      </button>
+      <button class="nav-btn" data-view="historyView">
+        Personal Bests
+      </button>
+      <button class="nav-btn" data-view="programsView">
+        Programs
+      </button>
+    </div>
+
+    <div>
+      <div class="sidebar-section-title">Admin</div>
+      <button class="nav-btn" id="adminNavBtn" data-view="adminView">
+        Upload Drill
+        <span class="right-label">admin</span>
+      </button>
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <span class="tagline-small"> Off-ice Training Companion for Student Hockey Players</span>
+      </div>
+      <div class="flex-between" style="gap:8px;">
+        <span id="currentUserLabel" class="user-chip">Not logged in</span>
+        <button id="logoutBtn" class="btn-small-outline hidden">Logout</button>
+      </div>
+    </header>
+
+    <!-- AUTH VIEW -->
+    <section id="authView" class="view">
+      <h1>Welcome to PuckPal</h1>
+      <p class="subtitle">
+        Log in or register to access structured off-ice drills, track your progress, and generate a personalized 30-day training plan.
+      </p>
+
+      <div class="two-col">
+        <div class="card">
+          <h2>Login</h2>
+          <p class="muted">Existing users can sign in here, including the coach admin account.</p>
+          <div style="margin-top:10px;">
+            <label for="login-username">Username</label>
+            <input id="login-username" type="text" placeholder="e.g. ethan10" />
+            <label for="login-password" style="margin-top:8px;">Password</label>
+            <input id="login-password" type="password" />
+            <button class="btn" id="loginBtn">Log in</button>
+            <div id="loginError" class="alert hidden"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Register</h2>
+          <p class="muted">Create a training profile. Passwords are stored using SHA-256 hashing for basic security.</p>
+          <div style="margin-top:10px;">
+            <label for="reg-username">Username</label>
+            <input id="reg-username" type="text" />
+            <label for="reg-password" style="margin-top:8px;">Password</label>
+            <input id="reg-password" type="password" />
+            <button class="btn secondary" id="registerBtn">Register</button>
+            <div id="registerError" class="alert hidden"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOME / DRILL FINDER -->
+    <section id="homeView" class="view hidden">
+      <h1>Drill Finder</h1>
+      <p class="subtitle">
+        Choose your level and focus to find off-ice drills you can run in a bedroom, hallway, or small training area.
+      </p>
+      <div class="two-col">
+        <div class="card">
+          <h2>Filters</h2>
+          <div style="margin-top:10px;">
+            <label>Skill Level</label>
+            <select id="filter-level">
+              <option value="all">Any</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+
+            <label style="margin-top:10px;">Training Category</label>
+            <select id="filter-type">
+              <option value="all">Any</option>
+              <option value="stickhandling">Stickhandling</option>
+              <option value="shooting">Shooting</option>
+              <option value="footwork">Footwork / Agility</option>
+            </select>
+
+            <div class="btn-row">
+              <button class="btn" id="findDrillsBtn">Show drills</button>
+              <button class="btn secondary" id="homeToHistoryBtn">Personal bests</button>
+            </div>
+          </div>
+          <p class="tagline-small">
+            Tip: start with beginner stickhandling drills on smooth flooring before adding shooting and high-intensity work.
+          </p>
+        </div>
+
+        <div class="card">
+          <h2>In what ways do you want to improve?</h2>
+          <p class="muted">
+            Try the filter multiple times to see which drills fit your preference the best.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- DRILL LIST -->
+    <section id="drillListView" class="view hidden">
+      <div class="flex-between">
+        <div>
+          <h1>Drill Library</h1>
+          <p id="drillListSubtitle" class="subtitle"></p>
+        </div>
+        <button class="btn small secondary" id="backToFiltersBtn">Back to filters</button>
+      </div>
+      <div class="card">
+        <div id="drillGrid" class="drill-grid"></div>
+      </div>
+    </section>
+
+    <!-- DRILL DETAIL -->
+    <section id="drillDetailView" class="view hidden">
+      <div class="flex-between">
+        <div>
+          <h1 id="detailTitle">Drill</h1>
+          <p id="detailSubtitle" class="subtitle"></p>
+        </div>
+        <button class="btn small secondary" id="backToListBtn">Back to drills</button>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div style="border-radius:14px;overflow:hidden;background:#000;margin-bottom:8px;">
+            <iframe id="detailVideo" width="100%" height="250" src="" 
+                    title="Drill video" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+          </div>
+          <p id="detailDescription" class="muted"></p>
+          <div class="pill-row" style="margin-top:8px;">
+            <span id="detailLevelPill" class="pill"></span>
+            <span id="detailTypePill" class="pill"></span>
+            <span id="detailEquipmentPill" class="pill"></span>
+            <span id="detailSpacePill" class="pill"></span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Timer & Metrics</h2>
+          <div class="flex-between" style="margin-top:8px;">
+            <div>
+              <div id="timerDisplay" class="timer-display">00:00.0</div>
+              <div class="tagline-small">Manual timer (press Start when ready)</div>
+            </div>
+            <div>
+              <label for="repsInput">Repetitions</label>
+              <input id="repsInput" type="number" min="1" value="10" style="width:90px;">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn small" id="startTimerBtn">Start</button>
+            <button class="btn small secondary" id="stopTimerBtn" disabled>Stop</button>
+            <button class="btn small" id="saveAttemptBtn" disabled>Save attempt</button>
+          </div>
+          <div id="timerMessage" class="tagline-small" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="historyView" class="view hidden">
+      <div class="flex-between">
+        <div>
+          <h1>Personal Bests</h1>
+          <p class="subtitle">
+            Best performance per drill, measured by repetitions per second. Use this to evaluate improvement over time.
+          </p>
+        </div>
+        <button class="btn small secondary" id="historyToHomeBtn">Back to training</button>
+      </div>
+
+      <div class="card">
+        <div class="flex-between">
+          <h2>Best results by drill</h2>
+          <button class="btn small danger" id="clearAllHistoryBtn">Clear all data</button>
+        </div>
+        <table>
+          <thead>
+          <tr>
+            <th>Drill</th>
+            <th>Date</th>
+            <th>Reps</th>
+            <th>Time (s)</th>
+            <th>Rate (reps/s)</th>
+          </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+        <p id="noHistoryText" class="tagline-small" style="margin-top:8px;">
+          No attempts recorded yet. Complete a drill and save your result to see personal bests.
+        </p>
+      </div>
+    </section>
+
+    <!-- PROGRAMS -->
+    <section id="programsView" class="view hidden">
+      <h1>30-Day Training Programs</h1>
+      <p class="subtitle">
+        Generate a personalized 30-day off-ice schedule using your constraints. The generator uses filtering, scoring,
+        and progression rules to build a realistic plan that replaces some rink time.
+      </p>
+
+      <div class="card">
+        <h2>Program Generator</h2>
+        <div class="two-col">
+          <div>
+            <label>Skill level</label>
+            <select id="prefLevel">
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+
+            <label style="margin-top:8px;">Training focus</label>
+            <select id="prefFocus">
+              <option value="balanced">Balanced</option>
+              <option value="stickhandling">Stickhandling</option>
+              <option value="shooting">Shooting</option>
+              <option value="footwork">Footwork / Agility</option>
+            </select>
+
+            <label style="margin-top:8px;">Daily training time</label>
+            <select id="prefTime">
+              <option value="short">5–10 min</option>
+              <option value="medium">10–20 min</option>
+              <option value="long">20–30 min</option>
+            </select>
+          </div>
+          <div>
+            <label>Equipment available</label>
+            <div class="pill-row" style="margin-top:4px;">
+              <label class="pill"><input type="checkbox" class="equipCheck" value="stick" checked> stick</label>
+              <label class="pill"><input type="checkbox" class="equipCheck" value="ball" checked> ball/puck</label>
+              <label class="pill"><input type="checkbox" class="equipCheck" value="cones"> cones</label>
+              <label class="pill"><input type="checkbox" class="equipCheck" value="pad"> shooting pad</label>
+            </div>
+
+            <label style="margin-top:8px;">Training space</label>
+            <select id="prefSpace">
+              <option value="small">Small (bedroom)</option>
+              <option value="medium">Medium (hallway/living room)</option>
+              <option value="large">Large (garage/outdoors)</option>
+            </select>
+
+            <div class="btn-row">
+              <button class="btn small" id="generateProgramBtn">Generate 30-day plan</button>
+              <button class="btn small secondary" id="clearProgramBtn">Clear saved plan</button>
+            </div>
+            <p id="programMessage" class="tagline-small"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex-between">
+          <h2>Your 30-Day Calendar</h2>
+          <span class="tagline-small">Each cell = one day’s main drill, repetitions, and minutes.</span>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+        <p id="noProgramText" class="tagline-small" style="margin-top:8px;">
+          No program generated yet. Fill in your preferences above and click “Generate 30-day plan”.
+        </p>
+      </div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="adminView" class="view hidden">
+      <h1>Admin – Manage Drills</h1>
+      <p class="subtitle">
+        Admin users can upload new drills, adjust metadata, or delete outdated drills. This simulates the coach
+        maintaining the off-ice drill library.
+      </p>
+      <div class="card">
+        <h2>Create / Edit Drill</h2>
+        <div class="two-col">
+          <div>
+            <label>Title</label>
+            <input id="admin-title" type="text" placeholder="e.g. Corridor QuickTouches" />
+
+            <label style="margin-top:8px;">Level</label>
+            <select id="admin-level">
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+
+            <label style="margin-top:8px;">Category</label>
+            <select id="admin-type">
+              <option value="stickhandling">Stickhandling</option>
+              <option value="shooting">Shooting</option>
+              <option value="footwork">Footwork / Agility</option>
+            </select>
+
+            <label style="margin-top:8px;">Recommended space</label>
+            <select id="admin-space">
+              <option value="small">Small (bedroom)</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+          <div>
+            <label>Equipment (comma-separated)</label>
+            <input id="admin-equipment" type="text" placeholder="stick, ball, cones" />
+
+            <label style="margin-top:8px;">YouTube video URL</label>
+            <input id="admin-video" type="text" placeholder="https://www.youtube.com/embed/..." />
+
+            <label style="margin-top:8px;">Description / Purpose</label>
+            <textarea id="admin-description" rows="3" placeholder="Explain the drill's purpose and correct form."></textarea>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn small" id="adminAddDrillBtn">Save drill</button>
+        </div>
+        <p id="adminMessage" class="tagline-small"></p>
+      </div>
+
+      <div class="card">
+        <h2>Existing Drills (including defaults)</h2>
+        <table>
+          <thead>
+          <tr>
+            <th>Title</th>
+            <th>Level</th>
+            <th>Type</th>
+            <th>Space</th>
+            <th>Source</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody id="adminDrillTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  /********************************************************************
+   * PuckPal – Core Data Definitions
+   ********************************************************************/
+
+  // LocalStorage keys
+  const STORAGE_KEYS = {
+    USERS: 'puckpal_users_v2',
+    DRILLS_CUSTOM: 'puckpal_drills_custom_v2',
+    PROGRESS: 'puckpal_progress_v2',
+    PROGRAM: 'puckpal_program_v2'
+  };
+
+  // Default drills (base library) – can be extended but not deleted from storage
+    const defaultDrills = [
+    {
+      id: 'toe-drag-lane',
+      title: 'Toe-Drag Lane Control',
+      level: 'intermediate',
+      type: 'stickhandling',
+      minTime: 6,
+      maxTime: 12,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'medium',
+      description: 'Practice tight toe drags in a narrow “lane” to simulate beating defenders in close quarters. Focus on pulling the puck across your body while keeping your head up.',
+      videoUrl: 'https://www.youtube.com/embed/DjY2JFM0y5g'
+    },
+    {
+      id: 'box-agility-steps',
+      title: 'Box Agility Footwork Pattern',
+      level: 'beginner',
+      type: 'footwork',
+      minTime: 4,
+      maxTime: 8,
+      equipment: [],
+      space: 'small',
+      intensity: 'low',
+      description: 'Set four small markers to form a square. Step in and out of the box with quick feet to build lateral mobility and acceleration.',
+      videoUrl: 'https://www.youtube.com/embed/w3LiT2d5Lk0'
+    },
+    {
+      id: 'rapid-fire-shots',
+      title: 'Rapid Fire Wrist Shots',
+      level: 'advanced',
+      type: 'shooting',
+      minTime: 8,
+      maxTime: 15,
+      equipment: ['stick', 'ball', 'pad'],
+      space: 'medium',
+      intensity: 'high',
+      description: 'Shoot quickly and repeatedly, aiming for recovery speed between shots. Focus on weight transfer and maintaining accuracy under fatigue.',
+      videoUrl: 'https://www.youtube.com/embed/9hYo2FXl1Zg'
+    },
+    {
+      id: 'mirror-react-drill',
+      title: 'Mirror Reaction Stickhandling',
+      level: 'intermediate',
+      type: 'stickhandling',
+      minTime: 5,
+      maxTime: 10,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'medium',
+      description: 'Use a screen showing random directional arrows or ask someone to give cues. Change direction of stickhandling instantly to enhance reaction time.',
+      videoUrl: 'https://www.youtube.com/embed/ptZx2hfTS64'
+    },
+    {
+      id: 'crossover-lateral-steps',
+      title: 'Crossover Lateral Step Series',
+      level: 'intermediate',
+      type: 'footwork',
+      minTime: 6,
+      maxTime: 10,
+      equipment: [],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Perform continuous lateral crossovers to mimic edge-work mechanics off the ice. Keep hips low and push explosively.',
+      videoUrl: 'https://www.youtube.com/embed/HfdoP6qhGqE'
+    },
+    {
+      id: 'around-the-world-control',
+      title: 'Around-the-World Control',
+      level: 'beginner',
+      type: 'stickhandling',
+      minTime: 5,
+      maxTime: 8,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'low',
+      description: 'Move the puck in a full circle around your body, switching directions every few reps. Builds wide-range control and improves wrist dexterity.',
+      videoUrl: 'https://www.youtube.com/embed/oIAIPT6g3q8'
+    },
+    {
+      id: 'slapshot-form-builder',
+      title: 'Slapshot Form Builder',
+      level: 'advanced',
+      type: 'shooting',
+      minTime: 10,
+      maxTime: 15,
+      equipment: ['stick', 'pad'],
+      space: 'medium',
+      intensity: 'high',
+      description: 'Break down the slapshot into load, strike, and follow-through phases. Practice each component slowly before combining them explosively.',
+      videoUrl: 'https://www.youtube.com/embed/cdxe3ZKJvlk'
+    },
+    {
+      id: 'core-stability-stickhandling',
+      title: 'Core Stability Stickhandling',
+      level: 'beginner',
+      type: 'stickhandling',
+      minTime: 6,
+      maxTime: 12,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'low',
+      description: 'Sit in a V-hold or kneeling position and stickhandle while maintaining core tension. Builds stability and improves puck control under fatigue.',
+      videoUrl: 'https://www.youtube.com/embed/Y6JWpCvz9O0'
+    },
+    {
+      id: 'fig8-beginner',
+      title: 'Figure-8 Stickhandling (Stationary)',
+      level: 'beginner',
+      type: 'stickhandling',
+      minTime: 5,
+      maxTime: 10,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'low',
+      description: 'Work on basic hand control by moving the ball around two objects in a figure-8 pattern while stationary.',
+      videoUrl: 'https://www.youtube.com/embed/Bt4zF508zN8'
+    },
+    {
+      id: 'corridor-quicktouch',
+      title: 'Corridor QuickTouches',
+      level: 'intermediate',
+      type: 'stickhandling',
+      minTime: 8,
+      maxTime: 15,
+      equipment: ['stick', 'ball', 'cones'],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Set up a narrow corridor with cones and tap the puck quickly from side to side while walking forward.',
+      videoUrl: 'https://www.youtube.com/embed/36nLxGXN3yo'
+    },
+    {
+      id: 'wall-shots',
+      title: 'Wall Shot Repetition',
+      level: 'beginner',
+      type: 'shooting',
+      minTime: 10,
+      maxTime: 15,
+      equipment: ['stick', 'ball', 'pad'],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Use a shooting pad and a wall or net to repeat quick wrist shots, focusing on weight transfer and follow-through.',
+      videoUrl: 'https://www.youtube.com/embed/1ey0K9xi6s4'
+    },
+    {
+      id: 'one-leg-balance',
+      title: 'Single-Leg Balance with Puck Control',
+      level: 'intermediate',
+      type: 'footwork',
+      minTime: 5,
+      maxTime: 10,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'medium',
+      description: 'Balance on one leg while stickhandling to challenge your core and ankle stability while keeping eyes up.',
+      videoUrl: 'https://www.youtube.com/embed/Rzv1I8ZH0Zg'
+    },
+    {
+      id: 'fake-shot-quickrelease',
+      title: 'Fake Shot & Quick Release',
+      level: 'advanced',
+      type: 'shooting',
+      minTime: 8,
+      maxTime: 15,
+      equipment: ['stick', 'ball', 'pad'],
+      space: 'medium',
+      intensity: 'high',
+      description: 'Practice faking a shot and pulling the puck laterally before releasing a quick shot to simulate beating defenders.',
+      videoUrl: 'https://www.youtube.com/embed/BpC3y9hpvIE'
+    },
+    {
+      id: 'wide-reach-handling',
+      title: 'Wide Reach Stickhandling',
+      level: 'beginner',
+      type: 'stickhandling',
+      minTime: 5,
+      maxTime: 10,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'low',
+      description: 'Extend your reach far left and right while keeping the ball moving. Builds range of control and shoulder mobility.',
+      videoUrl: 'https://www.youtube.com/embed/hhRdGTPqz5A'
+    },
+    {
+      id: 'triangle-weave',
+      title: 'Triangle Cone Weave',
+      level: 'intermediate',
+      type: 'stickhandling',
+      minTime: 8,
+      maxTime: 12,
+      equipment: ['stick', 'ball', 'cones'],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Arrange three cones in a triangle and weave in tight patterns. Great for hand speed and spatial awareness.',
+      videoUrl: 'https://www.youtube.com/embed/TgspFqLNpSw'
+    },
+    {
+      id: 'moving-fig8-weave',
+      title: 'Moving Figure-8 Weave',
+      level: 'advanced',
+      type: 'stickhandling',
+      minTime: 10,
+      maxTime: 15,
+      equipment: ['stick', 'ball', 'cones'],
+      space: 'large',
+      intensity: 'high',
+      description: 'Perform moving figure-8s while walking or jogging. Perfect for simulating in-game movement.',
+      videoUrl: 'https://www.youtube.com/embed/iyfbqeXaj94'
+    },
+    {
+      id: 'one-hand-control',
+      title: 'One-Hand Puck Control',
+      level: 'advanced',
+      type: 'stickhandling',
+      minTime: 6,
+      maxTime: 10,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'medium',
+      description: 'Stickhandle using only your top hand to build elite control and wrist strength.',
+      videoUrl: 'https://www.youtube.com/embed/9xOFDYtCiXU'
+    },
+    {
+      id: 'ladder-handle',
+      title: 'Ladder Stickhandling Footwork Combo',
+      level: 'intermediate',
+      type: 'stickhandling',
+      minTime: 8,
+      maxTime: 12,
+      equipment: ['stick', 'ball', 'cones'],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Combine stickhandling with fast footwork steps through a ladder pattern.',
+      videoUrl: 'https://www.youtube.com/embed/Xud9PTL4q60'
+    },
+    {
+      id: 'knee-down-shots',
+      title: 'Knee-Down Wrist Shot Control',
+      level: 'beginner',
+      type: 'shooting',
+      minTime: 6,
+      maxTime: 12,
+      equipment: ['stick', 'pad'],
+      space: 'medium',
+      intensity: 'low',
+      description: 'Shoot from a kneeling stance to isolate upper-body mechanics and improve release consistency.',
+      videoUrl: 'https://www.youtube.com/embed/h8glXkFRuOA'
+    },
+    {
+      id: 'quick-set-release',
+      title: 'Quick Set & Release Shooting',
+      level: 'intermediate',
+      type: 'shooting',
+      minTime: 10,
+      maxTime: 15,
+      equipment: ['stick', 'ball', 'pad'],
+      space: 'medium',
+      intensity: 'high',
+      description: 'Set the ball quickly and release with minimal setup time. Mimics game-speed wrist shot situations.',
+      videoUrl: 'https://www.youtube.com/embed/kCXVYJ9Gd10'
+    },
+    {
+      id: 'moving-snapshot',
+      title: 'Moving Snapshot Drill',
+      level: 'advanced',
+      type: 'shooting',
+      minTime: 12,
+      maxTime: 18,
+      equipment: ['stick', 'ball', 'pad'],
+      space: 'large',
+      intensity: 'high',
+      description: 'Walk laterally while firing snapshots on the move. Builds accuracy with unstable footwork.',
+      videoUrl: 'https://www.youtube.com/embed/Z0llh_kvRy8'
+    },
+    {
+      id: 'dot-drill',
+      title: '5-Point Dot Agility Drill',
+      level: 'beginner',
+      type: 'footwork',
+      minTime: 4,
+      maxTime: 8,
+      equipment: [],
+      space: 'small',
+      intensity: 'low',
+      description: 'Use 5 floor dots to perform quick directional changes. Great warm-up agility.',
+      videoUrl: 'https://www.youtube.com/embed/pnNfmqHyTR8'
+    },
+    {
+      id: 'side-hop-explosive',
+      title: 'Explosive Lateral Side-Hops',
+      level: 'intermediate',
+      type: 'footwork',
+      minTime: 6,
+      maxTime: 12,
+      equipment: [],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Jump side-to-side quickly to improve skating-like lateral explosiveness.',
+      videoUrl: 'https://www.youtube.com/embed/EA3ZBVy7c6c'
+    },
+    {
+      id: 'cone-sprint-react',
+      title: 'Cone Sprint Reaction Drill',
+      level: 'advanced',
+      type: 'footwork',
+      minTime: 8,
+      maxTime: 15,
+      equipment: ['cones'],
+      space: 'large',
+      intensity: 'high',
+      description: 'Sprint to different cones based on verbal/visual cues—great for agility under uncertainty.',
+      videoUrl: 'https://www.youtube.com/embed/Z6_WZq3E7DY'
+    },
+    {
+      id: 'backward-shuffle',
+      title: 'Backward Shuffle Agility',
+      level: 'intermediate',
+      type: 'footwork',
+      minTime: 5,
+      maxTime: 10,
+      equipment: [],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Move backward with controlled shuffles, strengthening hamstrings and hockey stride patterns.',
+      videoUrl: 'https://www.youtube.com/embed/O12E6Mzl6So'
+    },
+    {
+      id: 'rotation-throws',
+      title: 'Rotational Power Twists',
+      level: 'intermediate',
+      type: 'footwork',
+      minTime: 5,
+      maxTime: 9,
+      equipment: [],
+      space: 'medium',
+      intensity: 'medium',
+      description: 'Simulate rotational throws using core twisting motions. Builds energy transfer used in shooting.',
+      videoUrl: 'https://www.youtube.com/embed/SetPQuwzF_0'
+    },
+    {
+      id: 'high-knee-handle',
+      title: 'High-Knee Stickhandling March',
+      level: 'beginner',
+      type: 'stickhandling',
+      minTime: 6,
+      maxTime: 10,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'low',
+      description: 'March in place with high knees while maintaining puck control.',
+      videoUrl: 'https://www.youtube.com/embed/dxO0rljjrfg'
+    },
+    {
+      id: 'push-off-bounds',
+      title: 'Explosive Push-Off Bounds',
+      level: 'advanced',
+      type: 'footwork',
+      minTime: 10,
+      maxTime: 16,
+      equipment: [],
+      space: 'large',
+      intensity: 'high',
+      description: 'Leap sideways explosively to simulate hockey stride extension off-ice.',
+      videoUrl: 'https://www.youtube.com/embed/0VITQW2PwBE'
+    },
+    {
+      id: 'wall-ball-react',
+      title: 'Wall Ball Reaction Catch',
+      level: 'beginner',
+      type: 'footwork',
+      minTime: 5,
+      maxTime: 10,
+      equipment: ['ball'],
+      space: 'small',
+      intensity: 'low',
+      description: 'Throw a ball against a wall at varying speeds and catch it quickly. Improves hand-eye for puck pickups.',
+      videoUrl: 'https://www.youtube.com/embed/6Hnf40mLrjw'
+    },
+    {
+      id: 'shadow-react',
+      title: 'Shadow Reaction Stickhandling',
+      level: 'intermediate',
+      type: 'stickhandling',
+      minTime: 8,
+      maxTime: 12,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'medium',
+      description: 'Follow moving shadows or screen prompts to change directions suddenly.',
+      videoUrl: 'https://www.youtube.com/embed/FS1FMk04twg'
+    },
+    {
+      id: 'color-sprint',
+      title: 'Color Cue Reaction Sprints',
+      level: 'advanced',
+      type: 'footwork',
+      minTime: 8,
+      maxTime: 15,
+      equipment: ['cones'],
+      space: 'large',
+      intensity: 'high',
+      description: 'Sprint to different colored cones depending on the coach’s cue.',
+      videoUrl: 'https://www.youtube.com/embed/x76Nsznvv4Q'
+    },
+    {
+      id: 'fig8-shooting',
+      title: 'Figure-8 Footwork Shooting',
+      level: 'advanced',
+      type: 'shooting',
+      minTime: 10,
+      maxTime: 15,
+      equipment: ['stick', 'ball', 'pad', 'cones'],
+      space: 'large',
+      intensity: 'high',
+      description: 'Weave in figure-8 patterns before releasing quick shots.',
+      videoUrl: 'https://www.youtube.com/embed/4kvyF6p63a4'
+    },
+    {
+      id: 'behind-back-handle',
+      title: 'Behind-the-Back Stickhandling',
+      level: 'intermediate',
+      type: 'stickhandling',
+      minTime: 6,
+      maxTime: 11,
+      equipment: ['stick', 'ball'],
+      space: 'small',
+      intensity: 'medium',
+      description: 'Handle the puck behind your body to develop awareness and unusual control angles.',
+      videoUrl: 'https://www.youtube.com/embed/2ZIAIjuE5Zc'
+    }
+  ];
+
+
+  // Linked list node for 30-day program
+  class ProgramNode {
+    constructor(dayNumber, drillId, reps, minutes) {
+      this.dayNumber = dayNumber;
+      this.drillId = drillId;
+      this.reps = reps;
+      this.minutes = minutes;
+      this.next = null;
+    }
+  }
+
+  class ProgramLinkedList {
+    constructor() {
+      this.head = null;
+      this.tail = null;
+    }
+    append(dayNumber, drillId, reps, minutes) {
+      const node = new ProgramNode(dayNumber, drillId, reps, minutes);
+      if (!this.head) {
+        this.head = node;
+        this.tail = node;
+      } else {
+        this.tail.next = node;
+        this.tail = node;
+      }
+    }
+    toArray() {
+      const result = [];
+      let current = this.head;
+      while (current) {
+        result.push({
+          dayNumber: current.dayNumber,
+          drillId: current.drillId,
+          reps: current.reps,
+          minutes: current.minutes
+        });
+        current = current.next;
+      }
+      return result;
+    }
+  }
+
+  // Priority queue (max heap) used for choosing drills by score
+  class MaxHeap {
+    constructor() {
+      this.items = [];
+    }
+    insert(drill, score) {
+      this.items.push({ drill, score });
+      this.bubbleUp(this.items.length - 1);
+    }
+    bubbleUp(index) {
+      while (index > 0) {
+        const parentIndex = Math.floor((index - 1) / 2);
+        if (this.items[index].score <= this.items[parentIndex].score) break;
+        [this.items[index], this.items[parentIndex]] =
+          [this.items[parentIndex], this.items[index]];
+        index = parentIndex;
+      }
+    }
+    extractMax() {
+      if (this.items.length === 0) return null;
+      const max = this.items[0];
+      const end = this.items.pop();
+      if (this.items.length > 0) {
+        this.items[0] = end;
+        this.sinkDown(0);
+      }
+      return max;
+    }
+    sinkDown(index) {
+      const length = this.items.length;
+      while (true) {
+        let left = 2 * index + 1;
+        let right = 2 * index + 2;
+        let largest = index;
+
+        if (left < length && this.items[left].score > this.items[largest].score) {
+          largest = left;
+        }
+        if (right < length && this.items[right].score > this.items[largest].score) {
+          largest = right;
+        }
+        if (largest === index) break;
+        [this.items[index], this.items[largest]] =
+          [this.items[largest], this.items[index]];
+        index = largest;
+      }
+    }
+    isEmpty() {
+      return this.items.length === 0;
+    }
+  }
+
+  // Simple stack used for backtracking skipped drills
+  class Stack {
+    constructor() {
+      this.items = [];
+    }
+    push(item) {
+      this.items.push(item);
+    }
+    pop() {
+      return this.items.pop();
+    }
+    isEmpty() {
+      return this.items.length === 0;
+    }
+  }
+
+  /********************************************************************
+   * SHA-256 Password Hashing
+   ********************************************************************/
+
+  // Fallback: if crypto.subtle not available, we simply return plain text.
+  async function hashPassword(password) {
+    if (window.crypto && crypto.subtle) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } else {
+      // Fallback – not ideal, but ensures system still works offline.
+      return password;
+    }
+  }
+
+  // Pre-hashed admin password for "zionwang08;)"
+  const ADMIN_USERNAME = 'admin';
+  const ADMIN_HASH = '7cda60a49b6706a57ab3e51818717be1e3214b153cda30cfef3ee22974cccf27';
+
+  /********************************************************************
+   * Global state
+   ********************************************************************/
+  let currentUser = null; // { username, role }
+  let drills = [];        // merged default + custom
+  let currentDrill = null;
+
+  /********************************************************************
+   * LocalStorage Helpers
+   ********************************************************************/
+  function loadUsers() {
+    let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '{}');
+    // Ensure admin exists
+    if (!users[ADMIN_USERNAME]) {
+      users[ADMIN_USERNAME] = { passwordHash: ADMIN_HASH, role: 'admin' };
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    }
+    return users;
+  }
+  function saveUsers(users) {
+    users[ADMIN_USERNAME] = { passwordHash: ADMIN_HASH, role: 'admin' };
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  }
+
+  function loadCustomDrills() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.DRILLS_CUSTOM) || '[]');
+  }
+  function saveCustomDrills(list) {
+    localStorage.setItem(STORAGE_KEYS.DRILLS_CUSTOM, JSON.stringify(list));
+  }
+  function refreshDrills() {
+    const custom = loadCustomDrills();
+    drills = [...defaultDrills, ...custom];
+  }
+
+  function loadProgress(username) {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROGRESS) || '{}');
+    return all[username] || [];
+  }
+  function saveProgress(username, history) {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROGRESS) || '{}');
+    all[username] = history;
+    localStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(all));
+  }
+
+  function loadProgram(username) {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROGRAM) || '{}');
+    return all[username] || null;
+  }
+  function saveProgram(username, programArray) {
+    const all = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROGRAM) || '{}');
+    all[username] = programArray;
+    localStorage.setItem(STORAGE_KEYS.PROGRAM, JSON.stringify(all));
+  }
+
+  /********************************************************************
+   * UI Navigation
+   ********************************************************************/
+  const views = {
+    authView: document.getElementById('authView'),
+    homeView: document.getElementById('homeView'),
+    drillListView: document.getElementById('drillListView'),
+    drillDetailView: document.getElementById('drillDetailView'),
+    historyView: document.getElementById('historyView'),
+    programsView: document.getElementById('programsView'),
+    adminView: document.getElementById('adminView')
+  };
+
+  function switchView(viewId) {
+    Object.values(views).forEach(v => v.classList.add('hidden'));
+    views[viewId].classList.remove('hidden');
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === viewId);
+    });
+
+    if (viewId === 'historyView') renderHistory();
+    if (viewId === 'adminView') renderAdminTable();
+    if (viewId === 'programsView') renderProgramFromStorage();
+  }
+
+  function updateHeaderUser() {
+    const label = document.getElementById('currentUserLabel');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (currentUser) {
+      label.textContent = `Logged in as ${currentUser.username} (${currentUser.role})`;
+      label.classList.add('ok');
+      logoutBtn.classList.remove('hidden');
+    } else {
+      label.textContent = 'Not logged in';
+      label.classList.remove('ok');
+      logoutBtn.classList.add('hidden');
+    }
+    updateAdminVisibility();
+  }
+
+  function updateAdminVisibility() {
+    const adminBtn = document.getElementById('adminNavBtn');
+    if (currentUser && currentUser.role === 'admin') {
+      adminBtn.style.display = 'block';
+    } else {
+      adminBtn.style.display = 'none';
+    }
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      if (!currentUser && view !== 'authView') {
+        alert('Please log in first.');
+        switchView('authView');
+        return;
+      }
+      if (view === 'adminView' && (!currentUser || currentUser.role !== 'admin')) {
+        alert('Admin access only.');
+        return;
+      }
+      switchView(view);
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    currentUser = null;
+    updateHeaderUser();
+    switchView('authView');
+  });
+
+  /********************************************************************
+   * Auth Handlers
+   ********************************************************************/
+  const loginBtn = document.getElementById('loginBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const loginError = document.getElementById('loginError');
+  const registerError = document.getElementById('registerError');
+
+  loginBtn.addEventListener('click', async () => {
+    loginError.classList.add('hidden');
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value;
+    if (!u || !p) {
+      showError(loginError, 'Please fill in both fields.');
+      return;
+    }
+    const users = loadUsers();
+    if (!users[u]) {
+      showError(loginError, 'User not found.');
+      return;
+    }
+    const hash = await hashPassword(p);
+    if (users[u].passwordHash !== hash) {
+      showError(loginError, 'Incorrect password.');
+      return;
+    }
+    currentUser = { username: u, role: users[u].role || 'user' };
+    updateHeaderUser();
+    switchView('homeView');
+  });
+
+  registerBtn.addEventListener('click', async () => {
+    registerError.classList.add('hidden');
+    const u = document.getElementById('reg-username').value.trim();
+    const p = document.getElementById('reg-password').value;
+    if (!u || !p) {
+      showError(registerError, 'Please enter a username and password.');
+      return;
+    }
+    if (u === ADMIN_USERNAME) {
+      showError(registerError, 'The username "admin" is reserved.');
+      return;
+    }
+    const users = loadUsers();
+    if (users[u]) {
+      showError(registerError, 'That username is already taken.');
+      return;
+    }
+    const hash = await hashPassword(p);
+    users[u] = { passwordHash: hash, role: 'user' };
+    saveUsers(users);
+    currentUser = { username: u, role: 'user' };
+    updateHeaderUser();
+    switchView('homeView');
+  });
+
+  function showError(el, msg) {
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  /********************************************************************
+   * Drill Finder / List
+   ********************************************************************/
+  const findDrillsBtn = document.getElementById('findDrillsBtn');
+  const drillGrid = document.getElementById('drillGrid');
+  const drillListSubtitle = document.getElementById('drillListSubtitle');
+
+  document.getElementById('homeToHistoryBtn').addEventListener('click', () => {
+    switchView('historyView');
+  });
+
+  document.getElementById('backToFiltersBtn').addEventListener('click', () => {
+    switchView('homeView');
+  });
+
+  findDrillsBtn.addEventListener('click', () => {
+    const level = document.getElementById('filter-level').value;
+    const type = document.getElementById('filter-type').value;
+    renderDrillList(level, type);
+  });
+
+  function renderDrillList(levelFilter, typeFilter) {
+    switchView('drillListView');
+    drillGrid.innerHTML = '';
+    const filtered = drills.filter(d => {
+      const levelOk = levelFilter === 'all' || d.level === levelFilter;
+      const typeOk = typeFilter === 'all' || d.type === typeFilter;
+      return levelOk && typeOk;
+    });
+    drillListSubtitle.textContent = filtered.length
+      ? `${filtered.length} drill(s) found.`
+      : 'No drills match your filters. Try relaxing the filters.';
+    filtered.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'drill-card';
+      card.addEventListener('click', () => openDrillDetail(d.id));
+      const placeholderThumb = 'linear-gradient(135deg,#1a365d,#2c5282)';
+      card.innerHTML = `
+        <div class="thumb" style="background-image:${placeholderThumb};"></div>
+        <div class="drill-title">${d.title}</div>
+        <div class="drill-meta">
+          <span>${capitalize(d.level)}</span>
+          <span>${capitalize(d.type)}</span>
+        </div>
+      `;
+      drillGrid.appendChild(card);
+    });
+  }
+
+  function openDrillDetail(id) {
+    currentDrill = drills.find(d => d.id === id);
+    if (!currentDrill) return;
+    switchView('drillDetailView');
+
+    document.getElementById('detailTitle').textContent = currentDrill.title;
+    document.getElementById('detailSubtitle').textContent =
+      `${capitalize(currentDrill.level)} • ${capitalize(currentDrill.type)}`;
+    document.getElementById('detailDescription').textContent = currentDrill.description;
+    document.getElementById('detailLevelPill').textContent =
+      'Level: ' + capitalize(currentDrill.level);
+    document.getElementById('detailTypePill').textContent =
+      'Type: ' + capitalize(currentDrill.type);
+    document.getElementById('detailEquipmentPill').textContent =
+      'Equipment: ' + (currentDrill.equipment || []).join(', ');
+    document.getElementById('detailSpacePill').textContent =
+      'Space: ' + capitalize(currentDrill.space);
+
+    const iframe = document.getElementById('detailVideo');
+    iframe.src = currentDrill.videoUrl;
+
+    resetTimer();
+  }
+
+  document.getElementById('backToListBtn').addEventListener('click', () => {
+    switchView('drillListView');
+  });
+
+  /********************************************************************
+   * Timer / Metrics
+   ********************************************************************/
+  let timerInterval = null;
+  let startTime = null;
+  let elapsedMs = 0;
+
+  const timerDisplayEl = document.getElementById('timerDisplay');
+  const timerMessageEl = document.getElementById('timerMessage');
+  const startTimerBtn = document.getElementById('startTimerBtn');
+  const stopTimerBtn = document.getElementById('stopTimerBtn');
+  const saveAttemptBtn = document.getElementById('saveAttemptBtn');
+
+  startTimerBtn.addEventListener('click', () => {
+    if (!currentDrill) return;
+    elapsedMs = 0;
+    startTime = performance.now();
+    timerInterval = setInterval(updateTimer, 50);
+    timerMessageEl.textContent = 'Timer running. Complete the drill, then press Stop.';
+    startTimerBtn.disabled = true;
+    stopTimerBtn.disabled = false;
+    saveAttemptBtn.disabled = true;
+  });
+
+  stopTimerBtn.addEventListener('click', () => {
+    if (!timerInterval) return;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    elapsedMs = performance.now() - startTime;
+    updateTimerDisplay(elapsedMs);
+    timerMessageEl.textContent = 'Time captured. Enter reps and press “Save attempt”.';
+    saveAttemptBtn.disabled = false;
+    stopTimerBtn.disabled = true;
+  });
+
+  saveAttemptBtn.addEventListener('click', () => {
+    if (!currentUser || !currentDrill || elapsedMs <= 0) return;
+    const reps = parseInt(document.getElementById('repsInput').value, 10) || 0;
+    if (reps <= 0) {
+      timerMessageEl.textContent = 'Repetitions must be greater than zero.';
+      return;
+    }
+    const seconds = elapsedMs / 1000;
+    const rate = reps / seconds;
+    const attempt = {
+      drillId: currentDrill.id,
+      drillTitle: currentDrill.title,
+      date: new Date().toISOString(),
+      reps,
+      seconds: Number(seconds.toFixed(2)),
+      rate: Number(rate.toFixed(2))
+    };
+    const history = loadProgress(currentUser.username);
+    history.push(attempt);
+    saveProgress(currentUser.username, history);
+    timerMessageEl.textContent =
+      `Saved: ${reps} reps in ${seconds.toFixed(1)} s (${rate.toFixed(2)} reps/s).`;
+    saveAttemptBtn.disabled = true;
+    renderHistory(); // update bests
+  });
+
+  function resetTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    elapsedMs = 0;
+    updateTimerDisplay(0);
+    timerMessageEl.textContent = 'Press Start to begin timing your drill attempt.';
+    startTimerBtn.disabled = false;
+    stopTimerBtn.disabled = true;
+    saveAttemptBtn.disabled = true;
+  }
+
+  function updateTimer() {
+    const now = performance.now();
+    elapsedMs = now - startTime;
+    updateTimerDisplay(elapsedMs);
+  }
+
+  function updateTimerDisplay(ms) {
+    const totalSeconds = ms / 1000;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds - minutes * 60;
+    timerDisplayEl.textContent =
+      (minutes < 10 ? '0' + minutes : minutes) + ':' +
+      (seconds < 10 ? '0' : '') + seconds.toFixed(1);
+  }
+
+  /********************************************************************
+   * History / Personal Bests
+   ********************************************************************/
+  function renderHistory() {
+    const body = document.getElementById('historyBody');
+    const noText = document.getElementById('noHistoryText');
+    if (!currentUser) return;
+    const history = loadProgress(currentUser.username);
+    body.innerHTML = '';
+    if (!history.length) {
+      noText.style.display = 'block';
+      return;
+    }
+    noText.style.display = 'none';
+
+    // find best attempt per drill by rate
+    const bestByDrill = {};
+    history.forEach(h => {
+      if (!bestByDrill[h.drillId] || h.rate > bestByDrill[h.drillId].rate) {
+        bestByDrill[h.drillId] = h;
+      }
+    });
+
+    const bestList = Object.values(bestByDrill)
+      .sort((a, b) => b.rate - a.rate); // highest rate first
+
+    bestList.forEach(h => {
+      const tr = document.createElement('tr');
+      tr.classList.add('best-row');
+      tr.innerHTML = `
+        <td>${h.drillTitle}</td>
+        <td>${new Date(h.date).toLocaleString()}</td>
+        <td>${h.reps}</td>
+        <td>${h.seconds.toFixed(1)}</td>
+        <td>${h.rate.toFixed(2)}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  document.getElementById('historyToHomeBtn').addEventListener('click', () => {
+    switchView('homeView');
+  });
+
+  document.getElementById('clearAllHistoryBtn').addEventListener('click', () => {
+    if (!currentUser) return;
+    if (!confirm('Clear all saved performance data for this user?')) return;
+    saveProgress(currentUser.username, []);
+    renderHistory();
+  });
+
+  /********************************************************************
+   * Program Generator – Algorithms
+   ********************************************************************/
+  function canUseSpace(drillSpace, userSpace) {
+    if (userSpace === 'large') return true;
+    if (userSpace === 'medium') {
+      return drillSpace === 'small' || drillSpace === 'medium';
+    }
+    return drillSpace === 'small';
+  }
+
+  function hasRequiredEquipment(drillEquip, userEquip) {
+    for (const item of drillEquip) {
+      if (!userEquip.includes(item)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function getEligibleDrillsForProgram(prefs) {
+    return drills.filter(d =>
+      canUseSpace(d.space, prefs.space) &&
+      hasRequiredEquipment(d.equipment || [], prefs.equipment)
+    );
+  }
+
+  function isCloseDifficulty(drillLevel, targetDifficulty) {
+    if (drillLevel === targetDifficulty) return true;
+    if (drillLevel === 'beginner' && targetDifficulty === 'intermediate') return true;
+    if (drillLevel === 'intermediate' && (targetDifficulty === 'beginner' || targetDifficulty === 'advanced')) return true;
+    if (drillLevel === 'advanced' && targetDifficulty === 'intermediate') return true;
+    return false;
+  }
+
+  function scoreDrillForProgram(drill, prefs, targetDifficulty) {
+    let score = 0;
+
+    // Focus match
+    if (prefs.focus === 'balanced') {
+      score += 1;
+    } else if (drill.type === prefs.focus) {
+      score += 4;
+    }
+
+    // Difficulty match
+    if (drill.level === targetDifficulty) {
+      score += 4;
+    } else if (isCloseDifficulty(drill.level, targetDifficulty)) {
+      score += 2;
+    } else {
+      score -= 2;
+    }
+
+    // Time match (rough)
+    if (prefs.time === 'short' && drill.maxTime <= 10) score += 2;
+    else if (prefs.time === 'medium' && drill.maxTime <= 20) score += 2;
+    else if (prefs.time === 'long') score += 1;
+    else score -= 1;
+
+    // Equipment richness (slightly higher score for drills that use given equipment well)
+    score += Math.min((drill.equipment || []).length, 3) * 0.5;
+
+    return score;
+  }
+
+  function getTargetDifficultyForDay(dayNumber, baseLevel) {
+    if (dayNumber <= 7) return baseLevel;
+    if (dayNumber <= 14) return baseLevel;
+    if (dayNumber <= 21) {
+      if (baseLevel === 'beginner') return 'intermediate';
+      return baseLevel;
+    }
+    if (baseLevel === 'beginner') return 'intermediate';
+    if (baseLevel === 'intermediate') return 'advanced';
+    return 'advanced';
+  }
+
+  function estimateReps(drill, dayNumber) {
+    let base = 20;
+    if (drill.level === 'intermediate') base += 8;
+    if (drill.level === 'advanced') base += 16;
+    const extra = Math.floor(dayNumber / 3);
+    return base + extra;
+  }
+
+  function estimateMinutes(prefs) {
+    if (prefs.time === 'short') return 10;
+    if (prefs.time === 'medium') return 15;
+    return 25;
+  }
+
+  function generateProgram(prefs) {
+    const eligible = getEligibleDrillsForProgram(prefs);
+    if (!eligible.length) return null;
+
+    const list = new ProgramLinkedList();
+    let lastDrillId = null;
+    let secondLastDrillId = null;
+
+    for (let day = 1; day <= 30; day++) {
+      const targetDifficulty = getTargetDifficultyForDay(day, prefs.level);
+
+      const heap = new MaxHeap();
+      eligible.forEach(d => {
+        const score = scoreDrillForProgram(d, prefs, targetDifficulty);
+        heap.insert(d, score);
+      });
+
+      const skippedStack = new Stack();
+      let chosen = null;
+
+      while (!heap.isEmpty()) {
+        const candidate = heap.extractMax().drill;
+        // avoid repeating same drill for last 2 days
+        if (candidate.id === lastDrillId || candidate.id === secondLastDrillId) {
+          skippedStack.push(candidate);
+          continue;
+        }
+        chosen = candidate;
+        break;
+      }
+
+      if (!chosen) {
+        // backtrack: if all candidates were recently used, pop one from stack
+        if (!skippedStack.isEmpty()) chosen = skippedStack.pop();
+        else chosen = eligible[0];
+      }
+
+      const reps = estimateReps(chosen, day);
+      const minutes = estimateMinutes(prefs);
+      list.append(day, chosen.id, reps, minutes);
+
+      secondLastDrillId = lastDrillId;
+      lastDrillId = chosen.id;
+    }
+
+    return list.toArray();
+  }
+
+  /********************************************************************
+   * Program Generator – UI
+   ********************************************************************/
+  const generateProgramBtn = document.getElementById('generateProgramBtn');
+  const clearProgramBtn = document.getElementById('clearProgramBtn');
+  const programMessageEl = document.getElementById('programMessage');
+  const calendarGridEl = document.getElementById('calendarGrid');
+  const noProgramTextEl = document.getElementById('noProgramText');
+
+  generateProgramBtn.addEventListener('click', () => {
+    if (!currentUser) {
+      alert('Please log in first.');
+      return;
+    }
+    const prefs = collectProgramPreferences();
+    const program = generateProgram(prefs);
+    if (!program) {
+      programMessageEl.textContent = 'No eligible drills found for your equipment/space. Adjust preferences.';
+      return;
+    }
+    saveProgram(currentUser.username, program);
+    programMessageEl.textContent = 'New 30-day plan generated and saved. It overwrote any previous plan.';
+    renderProgram(program);
+  });
+
+  clearProgramBtn.addEventListener('click', () => {
+    if (!currentUser) return;
+    if (!confirm('Remove the saved 30-day program for this user?')) return;
+    saveProgram(currentUser.username, null);
+    calendarGridEl.innerHTML = '';
+    noProgramTextEl.style.display = 'block';
+    programMessageEl.textContent = 'Saved plan cleared.';
+  });
+
+  function collectProgramPreferences() {
+    const level = document.getElementById('prefLevel').value;
+    const focus = document.getElementById('prefFocus').value;
+    const time = document.getElementById('prefTime').value;
+    const space = document.getElementById('prefSpace').value;
+    const equipments = Array.from(document.querySelectorAll('.equipCheck'))
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+    return { level, focus, time, space, equipment: equipments };
+  }
+
+      function renderProgram(programArray) {
+      calendarGridEl.innerHTML = '';
+      if (!programArray || !programArray.length) {
+        noProgramTextEl.style.display = 'block';
+        return;
+      }
+      noProgramTextEl.style.display = 'none';
+
+      for (let day = 1; day <= 30; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+        cell.dataset.day = day; 
+
+        const entry = programArray.find(p => p.dayNumber === day);
+
+        if (entry) {
+          const drill = drills.find(d => d.id === entry.drillId) || { title: 'Unknown drill' };
+          cell.innerHTML = `
+            <div class="day-number">Day ${day}</div>
+            <div class="day-drill-title">${drill.title}</div>
+            <div class="day-meta">${entry.reps} reps • ${entry.minutes} min</div>
+          `;
+        } else {
+          cell.innerHTML = `
+            <div class="day-number">Day ${day}</div>
+            <div class="day-meta">Rest</div>
+          `;
+        }
+
+        cell.addEventListener("click", () => openProgramDrill(day));
+
+        calendarGridEl.appendChild(cell);
+      }
+    }
+
+
+  function renderProgramFromStorage() {
+    if (!currentUser) return;
+    const program = loadProgram(currentUser.username);
+    if (program) {
+      renderProgram(program);
+      noProgramTextEl.style.display = 'none';
+    } else {
+      calendarGridEl.innerHTML = '';
+      noProgramTextEl.style.display = 'block';
+    }
+  }
+
+  /********************************************************************
+   * Admin – Drill Management
+   ********************************************************************/
+  const adminAddDrillBtn = document.getElementById('adminAddDrillBtn');
+  const adminMessageEl = document.getElementById('adminMessage');
+  const adminDrillTable = document.getElementById('adminDrillTable');
+
+  adminAddDrillBtn.addEventListener('click', () => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      adminMessageEl.textContent = 'Only admin can save drills.';
+      return;
+    }
+    const title = document.getElementById('admin-title').value.trim();
+    const level = document.getElementById('admin-level').value;
+    const type = document.getElementById('admin-type').value;
+    const space = document.getElementById('admin-space').value;
+    const equipmentStr = document.getElementById('admin-equipment').value.trim();
+    const videoUrl = document.getElementById('admin-video').value.trim();
+    const description = document.getElementById('admin-description').value.trim();
+
+    if (!title || !videoUrl) {
+      adminMessageEl.textContent = 'Title and video URL are required.';
+      return;
+    }
+    const equipment = equipmentStr
+      ? equipmentStr.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    const custom = loadCustomDrills();
+    const idBase = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
+    const id = idBase + '-' + Date.now().toString(36);
+
+    custom.push({
+      id,
+      title,
+      level,
+      type,
+      minTime: 5,
+      maxTime: 15,
+      equipment,
+      space,
+      intensity: 'medium',
+      description,
+      videoUrl
+    });
+    saveCustomDrills(custom);
+    refreshDrills();
+    adminMessageEl.textContent = 'Drill saved. It will now appear in the library and generator.';
+    renderAdminTable();
+  });
+
+  function renderAdminTable() {
+    refreshDrills();
+    adminDrillTable.innerHTML = '';
+    drills.forEach(d => {
+      const tr = document.createElement('tr');
+      const isDefault = defaultDrills.some(def => def.id === d.id);
+      tr.innerHTML = `
+        <td>${d.title}</td>
+        <td>${capitalize(d.level)}</td>
+        <td>${capitalize(d.type)}</td>
+        <td>${capitalize(d.space)}</td>
+        <td>${isDefault ? 'Default' : 'Custom'}</td>
+        <td>${isDefault ? '' : '<button class="btn small danger" data-id="' + d.id + '">Delete</button>'}</td>
+      `;
+      adminDrillTable.appendChild(tr);
+    });
+
+    // attach delete handlers for custom drills
+    adminDrillTable.querySelectorAll('button[data-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        if (!confirm('Delete this custom drill?')) return;
+        const custom = loadCustomDrills().filter(d => d.id !== id);
+        saveCustomDrills(custom);
+        refreshDrills();
+        renderAdminTable();
+      });
+    });
+  }
+    function openProgramDrill(dayNumber) {
+      const program = loadProgram(currentUser.username);
+      if (!program) {
+        alert("No program available.");
+        return;
+      }
+
+      const entry = program.find(p => p.dayNumber === dayNumber);
+      if (!entry) {
+        alert("No drill assigned for this day.");
+        return;
+      }
+
+      const drill = drills.find(d => d.id === entry.drillId);
+      if (!drill) {
+        alert("Drill not found.");
+        return;
+      }
+
+      // ⭐ Open drill using your existing drill viewer logic
+      currentDrill = drill;
+      switchView("drillDetailView");
+
+      document.getElementById('detailTitle').textContent = drill.title;
+      document.getElementById('detailSubtitle').textContent =
+        `${capitalize(drill.level)} • ${capitalize(drill.type)}`;
+      document.getElementById('detailDescription').textContent = drill.description;
+
+      document.getElementById('detailLevelPill').textContent =
+        'Level: ' + capitalize(drill.level);
+      document.getElementById('detailTypePill').textContent =
+        'Type: ' + capitalize(drill.type);
+      document.getElementById('detailEquipmentPill').textContent =
+        'Equipment: ' + (drill.equipment || []).join(', ');
+      document.getElementById('detailSpacePill').textContent =
+        'Space: ' + capitalize(drill.space);
+
+      document.getElementById('detailVideo').src = drill.videoUrl;
+
+      resetTimer();
+    }
+
+
+
+  /********************************************************************
+   * Helpers
+   ********************************************************************/
+  function capitalize(str) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /********************************************************************
+   * Initialisation
+   ********************************************************************/
+  (function init() {
+    loadUsers();        // ensures admin exists
+    refreshDrills();
+    updateHeaderUser();
+    switchView('authView');
+  })();
+</script>
+</body>
+</html>
